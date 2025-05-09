@@ -1,0 +1,35 @@
+from PIL import Image
+import numpy as np
+import os
+
+class DataLoader:
+    def __init__(self, folder):
+        self._folder = folder
+        self._images = []
+
+    def data_loader(self):
+        image_size = (64, 64)
+        to_grayscale = True 
+
+        for filename in os.listdir(self._folder):
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
+                img_path = os.path.join(self._folder, filename)
+                img = Image.open(img_path)
+                img = img.resize(image_size)
+                img = img.convert('RGBA')
+
+                img_np = np.array(img)  
+                if to_grayscale:
+                    r = img_np[:, :, 0]
+                    g = img_np[:, :, 1]
+                    b = img_np[:, :, 2]
+                    gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+                    img_np = gray.astype(np.uint8)  
+
+                self._images.append(img_np)
+
+        return self._images
+
+    def get_images(self):
+     return self._images
+    
