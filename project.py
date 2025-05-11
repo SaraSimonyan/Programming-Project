@@ -1,7 +1,7 @@
 from PIL import Image
 import numpy as np
 import os
-from scipy import signal
+from skimage.filters import sobel
 from skimage.feature import hog, local_binary_pattern
 from skimage.color import rgb2gray
 from skimage.transform import resize
@@ -198,9 +198,8 @@ class DataLoader:
             
             # 5. Edge features
             if method in ['edges', 'all']:
-                # Sobel edge detector
-                sobel_x = signal.sobel(img_gray, axis=0)
-                sobel_y = signal.sobel(img_gray, axis=1)
+                sobel_x = sobel(img_gray, axis=0)
+                sobel_y = sobel(img_gray, axis=1)
                 magnitude = np.sqrt(sobel_x**2 + sobel_y**2)
                 
                 # Get edge direction histogram
@@ -242,3 +241,41 @@ class DataLoader:
         
     def get_filenames(self):
         return self._filenames
+    
+    def display_image(self, index):
+        """
+        Display an image at the specified index
+        
+        Parameters:
+        -----------
+        index : int
+            Index of the image to display
+        """
+        if 0 <= index < len(self._images):
+            plt.imshow(self._images[index])
+            plt.axis('off')
+            plt.show()
+        else:
+            self.logger.error(f"Index {index} out of range. Cannot display image.")
+    
+
+if __name__ == "__main__":
+    folder = "img/"
+    data_loader = DataLoader(folder)
+    
+    # Load images
+    images = data_loader.data_loader(to_grayscale=True, image_size=(64, 64), max_images=100, extract_labels=True)
+    
+    # Extract features
+    features = data_loader.extract_features(method='all', params={'pixels_per_cell': (8, 8), 'lbp_radius': 3})
+    
+    # Get labels and filenames
+    labels = data_loader.get_labels()
+    filenames = data_loader.get_filenames()
+    
+    print(f"Loaded {len(images)} images with {len(features[0])} features each.")
+    
+    # Display an image
+    data_loader.display_image(2)
+    
+    
