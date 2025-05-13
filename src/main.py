@@ -26,7 +26,7 @@ if __name__ == "__main__":
     feature_extractor = FeatureExtractor()
     features_df = feature_extractor.extract_features(
         images,
-        method='all',
+        method='all',  # Choose the feature extraction method
         params={
             'hist_bins': 32,            # Histogram parameters
             'num_dominant_colors': 3,   # Number of dominant colors to extract
@@ -41,15 +41,17 @@ if __name__ == "__main__":
     
     print(f"Loaded {len(images)} images with {len(features_df.columns)} features each.")
     
-    # Display an image
-    data_loader.display_image(2)
-    
+        
+    # Give data on datatypes in the DataFrame
+    print("Data types in DataFrame:")
+    print(features_df.dtypes)
+     
     # display features data
     print("Features DataFrame:")
     print(features_df.columns)
         
     data_analyzer = DataAnalyzer()
     data_analyzer.load_data(features_df)
-    data_analyzer.summary_statistics()
+    print(data_analyzer.summary_statistics())
     data_analyzer.sort_by_feature('intensity_mean', ascending=False)
     data_analyzer.filter_by_threshold('intensity_mean', 0.5, above=True)
