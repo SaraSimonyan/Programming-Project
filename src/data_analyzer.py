@@ -1,3 +1,6 @@
+import pandas as pd
+import logging
+
 class DataAnalyzer:
     def __init__(self):
         self._df = None  # Internal storage for the DataFrame
