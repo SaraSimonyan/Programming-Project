@@ -23,7 +23,7 @@ class DataLoader:
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
 
-    def load_data(self, to_grayscale=True, image_size=(64, 64), max_images=None, extract_labels=False):
+    def load_data(self, to_grayscale=False, image_size=(64, 64), max_images=None, extract_labels=False):
         """
         Load images from the specified folder
         

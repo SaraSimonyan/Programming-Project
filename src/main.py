@@ -17,7 +17,7 @@ if __name__ == "__main__":
     # Load the images
     data_loader = DataLoader(folder)
     images = data_loader.load_data(
-        to_grayscale=False,  # Keep color for color-based features
+        to_grayscale=False,
         image_size=(64, 64), 
         max_images=100, 
         extract_labels=True
