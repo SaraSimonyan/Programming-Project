@@ -61,7 +61,7 @@ class FeatureExtractor:
         
         # Create DataFrame with the right columns and pre-allocate rows
         feature_names = list(first_features.keys())
-        self._features = pd.DataFrame(columns=feature_names, index=range(len(images)))
+        self._features = pd.DataFrame(columns=feature_names, index=range(len(images)), dtype=float)
         
         # Set the first row with already extracted features
         self._features.iloc[0] = list(first_features.values())
@@ -95,23 +95,23 @@ class FeatureExtractor:
         # 1. Basic statistical features
         if method in ['basic_stats', 'all']:
             # Intensity statistics
-            features['intensity_mean'] = np.mean(img_gray)
-            features['intensity_std'] = np.std(img_gray)
-            features['intensity_min'] = np.min(img_gray)
-            features['intensity_max'] = np.max(img_gray)
-            features['intensity_median'] = np.median(img_gray)
+            features['intensity_mean'] = float(np.mean(img_gray))
+            features['intensity_std'] = float(np.std(img_gray))
+            features['intensity_min'] = float(np.min(img_gray))
+            features['intensity_max'] = float(np.max(img_gray))
+            features['intensity_median'] = float(np.median(img_gray))
             
             # Shape statistics
             height, width = img_gray.shape
-            features['height'] = height
-            features['width'] = width
-            features['aspect_ratio'] = width / height
+            features['height'] = float(height)
+            features['width'] = float(width)
+            features['aspect_ratio'] = float(width / height)
             
             # Higher order statistics
             intensity_mean = features['intensity_mean']
             intensity_std = features['intensity_std']
-            features['skewness'] = np.mean(((img_gray - intensity_mean) / (intensity_std + 1e-8)) ** 3)
-            features['kurtosis'] = np.mean(((img_gray - intensity_mean) / (intensity_std + 1e-8)) ** 4) - 3
+            features['skewness'] = float(np.mean(((img_gray - intensity_mean) / (intensity_std + 1e-8)) ** 3))
+            features['kurtosis'] = float(np.mean(((img_gray - intensity_mean) / (intensity_std + 1e-8)) ** 4) - 3)
         
         # 2. Histogram features
         if method in ['histogram', 'all']:
@@ -122,17 +122,17 @@ class FeatureExtractor:
                     hist = hist.astype(float) / hist.sum()
                     channel_name = ['R', 'G', 'B'][channel]
                     for bin_idx, value in enumerate(hist):
-                        features[f'hist_{channel_name}_{bin_idx}'] = value
+                        features[f'hist_{channel_name}_{bin_idx}'] = float(value)
             else:  # Grayscale
                 hist, _ = np.histogram(img_np, bins=bins, range=(0, 256))
                 hist = hist.astype(float) / hist.sum()
                 for bin_idx, value in enumerate(hist):
-                    features[f'hist_gray_{bin_idx}'] = value
+                    features[f'hist_gray_{bin_idx}'] = float(value)
         
         # 3. Contrast features
         if method in ['contrast', 'all']:
             # Global contrast: standard deviation of pixel values
-            features['global_contrast'] = np.std(img_gray)
+            features['global_contrast'] = float(np.std(img_gray))
             
             # Local contrast: average of local standard deviations
             local_size = params.get('local_contrast_size', 7)
@@ -142,20 +142,20 @@ class FeatureExtractor:
                     for j in range(0, img_gray.shape[1] - local_size, local_size):
                         patch = img_gray[i_local:i_local+local_size, j:j+local_size]
                         local_contrasts.append(np.std(patch))
-                features['local_contrast'] = np.mean(local_contrasts) if local_contrasts else 0
+                features['local_contrast'] = float(np.mean(local_contrasts) if local_contrasts else 0)
             else:
                 features['local_contrast'] = features['global_contrast']
         
         # 4. Color variance features
         if method in ['color_variance', 'all'] and len(img_np.shape) > 2:
             # Variance of each color channel
-            features['variance_R'] = np.var(img_rgb[:,:,0])
-            features['variance_G'] = np.var(img_rgb[:,:,1])
-            features['variance_B'] = np.var(img_rgb[:,:,2])
+            features['variance_R'] = float(np.var(img_rgb[:,:,0]))
+            features['variance_G'] = float(np.var(img_rgb[:,:,1]))
+            features['variance_B'] = float(np.var(img_rgb[:,:,2]))
             
             # Color diversity: variance between channel means
             channel_means = [np.mean(img_rgb[:,:,c]) for c in range(3)]
-            features['color_diversity'] = np.var(channel_means)
+            features['color_diversity'] = float(np.var(channel_means))
         
         # 5. Dominant colors
         if method in ['dominant_colors', 'all'] and len(img_np.shape) > 2:
@@ -180,10 +180,10 @@ class FeatureExtractor:
             
             # Add each dominant color and proportion as separate columns
             for color_idx in range(num_colors):
-                features[f'dom_color_{color_idx}_R'] = dominant_colors[color_idx, 0]
-                features[f'dom_color_{color_idx}_G'] = dominant_colors[color_idx, 1]
-                features[f'dom_color_{color_idx}_B'] = dominant_colors[color_idx, 2]
-                features[f'dom_color_{color_idx}_proportion'] = proportions[color_idx]
+                features[f'dom_color_{color_idx}_R'] = float(dominant_colors[color_idx, 0])
+                features[f'dom_color_{color_idx}_G'] = float(dominant_colors[color_idx, 1])
+                features[f'dom_color_{color_idx}_B'] = float(dominant_colors[color_idx, 2])
+                features[f'dom_color_{color_idx}_proportion'] = float(proportions[color_idx])
         
         # 6. Edge density features (simple replacement for HOG)
         if method in ['edge_density', 'all']:
@@ -192,19 +192,18 @@ class FeatureExtractor:
             edge_magnitude = np.sqrt(gx**2 + gy**2)
             
             # Edge density features
-            features['edge_mean'] = np.mean(edge_magnitude)
-            features['edge_std'] = np.std(edge_magnitude)
+            features['edge_mean'] = float(np.mean(edge_magnitude))
+            features['edge_std'] = float(np.std(edge_magnitude))
             
             # Threshold-based edge density
             threshold = params.get('edge_threshold', 0.1)
-            features['edge_density'] = np.mean(edge_magnitude > threshold)
+            features['edge_density'] = float(np.mean(edge_magnitude > threshold))
             
             # Directional gradients
-            features['gradient_x_mean'] = np.mean(np.abs(gx))
-            features['gradient_x_std'] = np.std(np.abs(gx))
-            features['gradient_y_mean'] = np.mean(np.abs(gy))
-            features['gradient_y_std'] = np.std(np.abs(gy))
+            features['gradient_x_mean'] = float(np.mean(np.abs(gx)))
+            features['gradient_x_std'] = float(np.std(np.abs(gx)))
+            features['gradient_y_mean'] = float(np.mean(np.abs(gy)))
+            features['gradient_y_std'] = float(np.std(np.abs(gy)))
         
         return features
-    
-    
+
